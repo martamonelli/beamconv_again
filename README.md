@@ -1,6 +1,4 @@
-# beamconv_again
-
-Fork of the [beamconv](https://github.com/AdriJD/beamconv) repository. The LiteBIRD_like branch contains a modified version of the code that is better optimized to simulate a LiteBIRD-like experiment.
+<b>This is a fork of the [beamconv](https://github.com/AdriJD/beamconv) repository. The LiteBIRD_like branch contains a modified version of the code that is better optimized to simulate a LiteBIRD-like experiment.</b>
 
 What follows is beamconv's README.
 
