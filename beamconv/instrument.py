@@ -4466,15 +4466,15 @@ class ScanStrategy(Instrument, qp.QMap):
 
         if tod is None:
             tod = self.tod
-            if noise_tod:
-                print('adding noise to TOD chunk')
-                nsamp_chunk = len(tod)
-                inp = np.random.normal(0.,1.,(nsamp_chunk,))
-                gen = ducc0.misc.OofaNoise(sigma, f_min, f_knee, f_samp, slope)
-                noise_chunk = gen.filterGaussian(inp)
-                tod += noise_chunk
-                self.tod = tod 
 
+        if noise_tod:
+            print('adding noise to TOD chunk') 
+            nsamp_chunk = len(tod)
+            inp = np.random.normal(0.,1.,(nsamp_chunk,))
+            gen = ducc0.misc.OofaNoise(sigma, f_min, f_knee, f_samp, slope)
+            noise_chunk = gen.filterGaussian(inp)
+            tod += noise_chunk
+            self.tod = tod 
 
         if filter_4fhwp:
             if self.hwp_dict['mode'] == 'continuous':
