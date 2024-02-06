@@ -13,8 +13,8 @@ import astropy.time
 from numba import njit
 import numpy as np
 
-DEFAULT_COORDINATE_SYSTEM = BarycentricMeanEcliptic() ###MARTA: in litebird_sim this was imported from .coordinates
-DEFAULT_TIME_SCALE = "tdb" ###MARTA: in litebird_sim this was imported from .onservations
+DEFAULT_COORDINATE_SYSTEM = BarycentricMeanEcliptic() ###MARTA: imported from .coordinates in litebird_sim
+DEFAULT_TIME_SCALE = "tdb"                            ###MARTA: imported from .observations in litebird_sim
 
 EARTH_L2_DISTANCE_KM = 1_496_509.30522
 
