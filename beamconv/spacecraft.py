@@ -321,8 +321,8 @@ class SpacecraftPositionAndVelocity:
 
         return velocities
 
-
-def spacecraft_pos_and_vel( ###MARTA: I've modified this function in order not to use Observation
+###MARTA: I've modified this function in order not to use Observation
+def spacecraft_pos_and_vel( 
     orbit: SpacecraftOrbit,
     #obs: Union[Observation, None] = None, ###MARTA: this wasn't commented
     start_time: Union[astropy.time.Time, None] = None,
@@ -340,7 +340,9 @@ def spacecraft_pos_and_vel( ###MARTA: I've modified this function in order not t
     equal to `earth_l2_distance_km`.
     The result is an object of type :class:`.SpacecraftPositionAndVelocity`.
     """
-    #assert obs or ( ###MARTA: the next 10 lines weren't commented
+    
+    ###MARTA: the next 10 lines weren't commented
+    #assert obs or ( 
     #    start_time and time_span_s
     #), "You must either provide a Observation or start_time/time_span_s"
     #
@@ -354,6 +356,7 @@ def spacecraft_pos_and_vel( ###MARTA: I've modified this function in order not t
     # We are going to compute the position of the L2 point at N times. The value N
     # is chosen such that the spacing between two consecutive times is never longer
     # than ~1 day
+    
     times = astropy.time.TimeDelta(
         np.linspace(
             start=0.0,

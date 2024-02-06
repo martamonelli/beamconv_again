@@ -13,6 +13,7 @@ import ducc0
 
 from . import scanning
 from . import tools
+from . import spacecraft
 from .detector import Beam
 
 class MPIBase(object):
@@ -1201,7 +1202,7 @@ class ScanStrategy(Instrument, qp.QMap):
 
 
     def __init__(self, duration=None, sample_rate=None, num_samples=None,
-                 external_pointing=False, ctime0=None, 
+                 external_pointing=False, ctime0=None, dipole_tod=False, nu=140e9,
                  noise_tod=False, sigma=0., f_min=0., f_knee=0., f_samp=0., slope=0.,
                  **kwargs):
         '''
@@ -1287,6 +1288,9 @@ class ScanStrategy(Instrument, qp.QMap):
         self.set_hwp_mod()
 
         self._data = {}
+        
+        self.dipole_tod=dipole_tod
+        self.nu=nu
         
         self.noise_tod=noise_tod
         self.sigma=sigma
@@ -3753,7 +3757,81 @@ class ScanStrategy(Instrument, qp.QMap):
             noise_chunk = gen.filterGaussian(inp)
             tod += noise_chunk
             self.tod = tod 
+            
+        if self.dipole_tod:
+            print('adding dipole to TOD chunk') 
+            nsamp_chunk = len(tod)
+            time_span_s = nsamp_chunk/self.fsamp
+            
+            if time_span_s > 86400:
+               print('')
+               print('dipole is computed every '+str(time_span_s/3600)+' hours, it should be less than a day!')
+               print('use more chunks to make it more accurate!')
+               print('')
+            
+            from astropy.time import Time
+            from astropy.constants import c as c_light
+            from astropy.constants import h, k_B
+            
+            qidx_start, qidx_end = self._chunk2idx(**kwargs)
+            
+            # setting up the scanning strategy parameters
+            ctime0_dipole = Time(self.ctime[qidx_start], format="unix") #conversion to astropy object
+            orbit = spacecraft.SpacecraftOrbit(ctime0_dipole)
 
+            pos_vel = spacecraft.spacecraft_pos_and_vel(orbit, start_time=ctime0_dipole, 
+                                             time_span_s=time_span_s, delta_time_s=time_span_s)
+
+            #pos_test = pos_vel.positions_km[:-1]
+            vel_test = pos_vel.velocities_km_s[:-1][0]
+
+            C_LIGHT_KM_S = c_light.value / 1e3
+            H_OVER_K_B = h.value / k_B.value
+
+            def planck(nu_hz, t_k):
+                """Return occupation number at frequency nu_hz and temperature t_k"""
+                return 1 / (np.exp(H_OVER_K_B * nu_hz / t_k) - 1)
+
+            def compute_scalar_product(theta, phi, v):
+                """Return the scalar (dot) product between a given direction and a velocity"""
+                dx, dy, dz = np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)
+                return dx * v[0] + dy * v[1] + dz * v[2]
+
+            def calculate_beta(theta, phi, v_km_s):
+                """Return a 2-tuple containing β·n and β"""
+                beta_dot_n = compute_scalar_product(theta, phi, v_km_s) / C_LIGHT_KM_S
+                beta = np.sqrt(v_km_s[0] ** 2 + v_km_s[1] ** 2 + v_km_s[2] ** 2) / C_LIGHT_KM_S
+                return beta_dot_n, beta
+
+            # Full formula in linearized units (the most widely used):
+            def compute_dipole_for_one_sample_total_from_lin_t(theta, phi, v_km_s, t_cmb_k, nu_hz, f_x, planck_t0):
+                beta_dot_n, beta = calculate_beta(theta, phi, v_km_s)
+                gamma = 1 / np.sqrt(1 - beta ** 2)
+                planck_t = planck(nu_hz, t_cmb_k / gamma / (1 - beta_dot_n))
+                return t_cmb_k / f_x * (planck_t / planck_t0 - 1)
+
+            def compute_dipole_for_one_chunk_total_from_lin_t(theta, phi, v_km_s, t_cmb_k, nu_hz, f_x, planck_t0):
+                dipole = np.empty(len(theta))
+                for i in range(len(theta)): #FIXME: avoid for loop!
+                    dipole[i] = compute_dipole_for_one_sample_total_from_lin_t(theta[i], phi[i], v_km_s, 
+                                                                               t_cmb_k, nu_hz, f_x, planck_t0)
+                return dipole
+
+            t_cmb_k = 2.72548 # Fixsen 2009 http://arxiv.org/abs/0911.1955
+            nu_hz = self.nu
+            x = h.value * nu_hz / (k_B.value * t_cmb_k)
+            f_x = x * np.exp(x) / (np.exp(x) - 1)
+            planck_t0 = planck(nu_hz, t_cmb_k)
+           
+            pointings = hp.pixelfunc.pix2ang(nside_spin, pix)
+            theta = pointings[0]
+            phi = pointings[1]
+            
+            dipole_chunk = compute_dipole_for_one_chunk_total_from_lin_t(theta,phi,vel_test,t_cmb_k,nu_hz,f_x,planck_t0)*1e6
+            
+            tod += dipole_chunk
+            self.tod = tod 
+    
         # Handle returned values.
         if return_tod:
             ret_tod = self.tod.copy()
