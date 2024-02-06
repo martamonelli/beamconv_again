@@ -9,6 +9,7 @@ import pickle
 import numpy as np
 import qpoint as qp
 import healpy as hp
+import ducc0
 
 from . import scanning
 from . import tools
@@ -1725,7 +1726,9 @@ class ScanStrategy(Instrument, qp.QMap):
             create_memmap=False, scatter=True, reuse_spinmaps=False,
             interp=False, save_tod=False, save_point=False, ctalk=0.,
             preview_pointing=False, filter_4fhwp=False, input_v=False,
-            beam_v=False, filter_highpass=False, **kwargs):
+            beam_v=False, filter_highpass=False, noise_tod=False, sigma=None,
+            f_min=None, f_knee=None, f_samp=None, slope=None, 
+            **kwargs):
         '''
         Loop over beam pairs, calculate boresight pointing
         in parallel, rotate or modulate instrument if
@@ -1966,6 +1969,12 @@ class ScanStrategy(Instrument, qp.QMap):
                             self.bin_tod(beam_a, add_to_global=True, 
                                          filter_4fhwp=filter_4fhwp, 
                                          filter_highpass=filter_highpass,
+                                         noise_tod=noise_tod,
+                                         sigma=sigma, 
+                                         f_min=f_min, 
+                                         f_knee=f_knee, 
+                                         f_samp=f_samp, 
+                                         slope=slope,
                                          **subchunk)
 
                     if beam_b and not beam_b.dead:
@@ -1981,6 +1990,12 @@ class ScanStrategy(Instrument, qp.QMap):
                             self.bin_tod(beam_b, add_to_global=True, 
                                          filter_4fhwp=filter_4fhwp, 
                                          filter_highpass=filter_highpass,
+                                         noise_tod=noise_tod,
+                                         sigma=sigma, 
+                                         f_min=f_min, 
+                                         f_knee=f_knee, 
+                                         f_samp=f_samp, 
+                                         slope=slope,
                                          **subchunk)
 
                     if do_ctalk:
@@ -1994,10 +2009,24 @@ class ScanStrategy(Instrument, qp.QMap):
                         if binning:
                             self.bin_tod(beam_a, tod=tod_a, add_to_global=True,
                             filter_4fhwp=filter_4fhwp, 
-                            filter_highpass=filter_highpass, **subchunk)
+                            filter_highpass=filter_highpass,
+                            noise_tod=noise_tod,
+                            sigma=sigma, 
+                            f_min=f_min, 
+                            f_knee=f_knee, 
+                            f_samp=f_samp, 
+                            slope=slope,
+                            **subchunk)
                             self.bin_tod(beam_b, tod=tod_b, add_to_global=True,
                             filter_highpass=filter_highpass,
-                            filter_4fhwp=filter_4fhwp, **subchunk)
+                            filter_4fhwp=filter_4fhwp, 
+                            noise_tod=noise_tod,
+                            sigma=sigma, 
+                            f_min=f_min, 
+                            f_knee=f_knee, 
+                            f_samp=f_samp, 
+                            slope=slope,
+                            **subchunk)
 
     def _chunk2idx(self, **kwargs):
         '''
@@ -4377,7 +4406,9 @@ class ScanStrategy(Instrument, qp.QMap):
 
 
     def bin_tod(self, beam, tod=None, flag=None, init=True, add_to_global=True,
-                filter_4fhwp=False, filter_highpass=False, **kwargs):
+                filter_4fhwp=False, filter_highpass=False, noise_tod=False,
+                sigma=None, f_min=None, f_knee=None, f_samp=None, slope=None,
+                **kwargs):
         '''
         Take internally stored tod and boresight
         pointing, combine with detector offset,
@@ -4435,6 +4466,15 @@ class ScanStrategy(Instrument, qp.QMap):
 
         if tod is None:
             tod = self.tod
+            if noise_tod:
+                print('adding noise to TOD chunk')
+                nsamp_chunk = len(tod)
+                inp = np.random.normal(0.,1.,(nsamp_chunk,))
+                gen = ducc0.misc.OofaNoise(sigma, f_min, f_knee, f_samp, slope)
+                noise_chunk = gen.filterGaussian(inp)
+                tod += noise_chunk
+                self.tod = tod 
+
 
         if filter_4fhwp:
             if self.hwp_dict['mode'] == 'continuous':
