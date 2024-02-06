@@ -1201,7 +1201,9 @@ class ScanStrategy(Instrument, qp.QMap):
 
 
     def __init__(self, duration=None, sample_rate=None, num_samples=None,
-                 external_pointing=False, ctime0=None, **kwargs):
+                 external_pointing=False, ctime0=None, 
+                 noise_tod=False, sigma=0., f_min=0., f_knee=0., f_samp=0., slope=0.,
+                 **kwargs):
         '''
         Initialize scan parameters.
 
@@ -1285,6 +1287,13 @@ class ScanStrategy(Instrument, qp.QMap):
         self.set_hwp_mod()
 
         self._data = {}
+        
+        self.noise_tod=noise_tod
+        self.sigma=sigma
+        self.f_min=f_min
+        self.f_knee=f_knee
+        self.f_samp=f_samp
+        self.slope=slope
 
         # Set some useful qpoint/qmap options as default.
         qmap_opts = dict(pol=True,
@@ -3734,6 +3743,16 @@ class ScanStrategy(Instrument, qp.QMap):
             self.tod += tod
         else:
             self.tod = tod
+                      
+        if self.noise_tod:
+            print('adding noise to TOD chunk') 
+            nsamp_chunk = len(tod)
+            inp = np.random.normal(0.,1.,(nsamp_chunk,))
+            gen = ducc0.misc.OofaNoise(self.sigma, self.f_min, 
+                                       self.f_knee, self.f_samp, self.slope)
+            noise_chunk = gen.filterGaussian(inp)
+            tod += noise_chunk
+            self.tod = tod 
 
         # Handle returned values.
         if return_tod:
@@ -3748,7 +3767,7 @@ class ScanStrategy(Instrument, qp.QMap):
             ret_nside = nside_spin
             ret_pa = np.degrees(pa)
             ret_hwp = np.degrees(hwp_ang) # Note, 0 if not set.
-
+            
         if return_tod and not return_point:
             return ret_tod
 
@@ -4406,8 +4425,7 @@ class ScanStrategy(Instrument, qp.QMap):
 
 
     def bin_tod(self, beam, tod=None, flag=None, init=True, add_to_global=True,
-                filter_4fhwp=False, filter_highpass=False, noise_tod=False,
-                sigma=None, f_min=None, f_knee=None, f_samp=None, slope=None,
+                filter_4fhwp=False, filter_highpass=False,
                 **kwargs):
         '''
         Take internally stored tod and boresight
@@ -4466,15 +4484,6 @@ class ScanStrategy(Instrument, qp.QMap):
 
         if tod is None:
             tod = self.tod
-
-        if noise_tod:
-            print('adding noise to TOD chunk') 
-            nsamp_chunk = len(tod)
-            inp = np.random.normal(0.,1.,(nsamp_chunk,))
-            gen = ducc0.misc.OofaNoise(sigma, f_min, f_knee, f_samp, slope)
-            noise_chunk = gen.filterGaussian(inp)
-            tod += noise_chunk
-            self.tod = tod 
 
         if filter_4fhwp:
             if self.hwp_dict['mode'] == 'continuous':
