@@ -11,3 +11,4 @@ tests/*
 beamconv.egg-info
 build/lib/beamconv/
 dist/
+temp_beam.npy
