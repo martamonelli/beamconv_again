@@ -1,8 +1,8 @@
 <b>This is a fork of the [beamconv](https://github.com/AdriJD/beamconv) repository.</b>
 
 <ul>
-  <li>The master branch is up-to-date with beamconv's master branch.</li>
-  <li>The LiteBIRD_like branch contains a modified version of beamconv's [muellerconvolver_comparison](https://github.com/AdriJD/beamconv/tree/muellerconvolver_comparison) branch (currently waiting to be merged in beamconv's master branch), that is better taylored to simulate a LiteBIRD-like experiment.</li>
+  <li>The <b>master</b> branch is up-to-date with beamconv's master branch.</li>
+  <li>The <b>LiteBIRD_like</b> branch contains a modified version of beamconv's <a href="[url](https://github.com/AdriJD/beamconv/tree/muellerconvolver_comparison)">muellerconvolver_comparison</a> branch (currently waiting to be merged in beamconv's master branch), that is better taylored to simulate a LiteBIRD-like experiment.</li>
 </ul>
 
 To run the LiteBIRD-like demo jupyter notebook, one needs to execute
