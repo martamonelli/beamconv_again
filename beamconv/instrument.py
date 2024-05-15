@@ -4292,7 +4292,8 @@ class ScanStrategy(Instrument, qp.QMap):
         elif mode == 's2a4':
             # Note the switch, blmm2 becomes blmp2 and vice versa.
             blmp2, blmm2 = tools.shift_blm(blm[1], blm[2], 4, eb=False)
-            ### tentative change
+            ### needed to match the behaviour of 
+            ### https://github.com/AdriJD/beamconv/tree/muellerconvolver_comparison
             blmm2 *= hwp_spin[1,2]
             blmp2 *= hwp_spin[2,1]
             #blmm2 *= hwp_spin[2,1]
