@@ -4292,10 +4292,11 @@ class ScanStrategy(Instrument, qp.QMap):
         elif mode == 's2a4':
             # Note the switch, blmm2 becomes blmp2 and vice versa.
             blmp2, blmm2 = tools.shift_blm(blm[1], blm[2], 4, eb=False)
-            #blmm2 *= hwp_spin[1,2]
-            #blmp2 *= hwp_spin[2,1]
-            blmm2 *= hwp_spin[2,1]
-            blmp2 *= hwp_spin[1,2]
+            ### tentative change
+            blmm2 *= hwp_spin[1,2]
+            blmp2 *= hwp_spin[2,1]
+            #blmm2 *= hwp_spin[2,1]
+            #blmp2 *= hwp_spin[1,2]
 
             return blmm2, blmp2
 
