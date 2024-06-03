@@ -2272,6 +2272,7 @@ class ScanStrategy(Instrument, qp.QMap):
         elif use_l2_scan:
 
             print('Implementing L2 scan') # Lagrange point 2
+            print('WARNING: Input maps should be in ecliptic coordinates!')
             self.ctime = self.l2_ctime(start=start, end=end, **ctime_kwargs)
             self.q_bore = self.l2_scan(start=start, end=end, **q_bore_kwargs)
 
