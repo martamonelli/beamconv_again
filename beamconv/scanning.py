@@ -394,8 +394,8 @@ def ctime2bore(ctime, theta_antisun=45., theta_boresight=50.,
 
     # From (theta,phi) to (ra,dec) convention
     # Also, all angles are converted in degrees
-    ra = np.degrees(phi_out) - 180.
-    dec = np.degrees(theta_out) - 90.
+    ra = np.degrees(phi_out)
+    dec = 90. - np.degrees(theta_out)
     psi = np.degrees(psi_out)
 
     # Calculate the quaternion
