@@ -393,7 +393,7 @@ def ctime2bore(ctime, theta_antisun=45., theta_boresight=50.,
     psi_out = wraparound_2pi(p_out[3, :])
     
     # warning if theta beyond allowed range
-    if np.where(theta_out > np.pi).size != 0:
+    if np.any(theta_out > np.pi):
         print('theta beyond allowed range [0,pi]!')
 
     # From (theta,phi) to (ra,dec) convention
