@@ -388,13 +388,17 @@ def ctime2bore(ctime, theta_antisun=45., theta_boresight=50.,
     theta_out = np.arctan2(np.sqrt(p_out[0,:]**2 + p_out[1,:]**2), p_out[2,:])
     phi_out = np.arctan2(p_out[1,:],p_out[0,:])
 
-    theta_out = wraparound_npi(theta_out, 1.)
-    phi_out = wraparound_npi(phi_out, 2.)
+    theta_out = wraparound_2pi(theta_out)
+    phi_out = wraparound_2pi(phi_out)
     psi_out = wraparound_2pi(p_out[3, :])
+    
+    # warning if theta beyond allowed range
+    if np.where(theta_out > np.pi).size != 0:
+        print('theta beyond allowed range [0,pi]!')
 
     # From (theta,phi) to (ra,dec) convention
     # Also, all angles are converted in degrees
-    ra = np.degrees(phi_out)
+    ra = np.degrees(phi_out)	
     dec = 90. - np.degrees(theta_out)
     psi = np.degrees(psi_out)
 

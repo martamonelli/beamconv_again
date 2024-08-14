@@ -3526,18 +3526,19 @@ class ScanStrategy(Instrument, qp.QMap):
         polang = beam.polang_truth # True polang for scanning.
         
         if (beam.quat != None).all():
-            q_off = beam.quat
+            q_off = beam.quat						#this is what it shoud be	#FIXME: remove comment
         else: q_off = self.det_offset(az_off, el_off, 0)
 
         # Rotate offset given rot_dict. Rotate the centroid
         # around the boresight. q_bore * q_rot * q_off.
-        ang = np.radians(self.rot_dict['angle'])
-        q_rot = np.asarray([np.cos(ang/2.), 0., 0., np.sin(ang/2.)])
-        q_off = tools.quat_left_mult(q_rot, q_off)
+        ang = np.radians(self.rot_dict['angle'])			#this is zero        	    	#FIXME: remove comment
+        q_rot = np.asarray([np.cos(ang/2.), 0., 0., np.sin(ang/2.)])	#this is the identity 	    	#FIXME: remove comment
+        q_off = tools.quat_left_mult(q_rot, q_off)			#this is the same as q_off 	#FIXME: remove comment
 
         # Expose pointing offset for mapmaking. Not for ghosts.
         if not beam.ghost:
-            beam.q_off = q_off
+            beam.q_off = q_off					#this is what it shoud be  	#FIXME: remove comment
+            								#beam.qoff is called next in the bore2radec or bore2pix funcs
 
         if skip_scan:
             # Allocate a fake tod.
@@ -3584,14 +3585,14 @@ class ScanStrategy(Instrument, qp.QMap):
             pa = np.empty(tod_size, dtype=np.float64)
             #If ground, point the detector in horizontal coordinates.
             if 'ground' in kwargs:
-                self.bore2radec(q_off,
+                self.bore2radec(q_off,						#HERE
                             self.ctime[qidx_start:qidx_end],
                             self.q_boreground[qidx_start:qidx_end],
                             q_hwp=None, sindec=False, return_pa=True,
                             ra=ra, dec=dec, pa=pa)
 
             else:
-                self.bore2radec(q_off,
+                self.bore2radec(q_off,						#HERE
                             self.ctime[qidx_start:qidx_end],
                             self.q_bore[qidx_start:qidx_end],
                             q_hwp=None, sindec=False, return_pa=True,
@@ -3605,18 +3606,20 @@ class ScanStrategy(Instrument, qp.QMap):
             # In no interpolation is required, we can go straight
             # from quaternion to pix and pa.
             if 'ground' in kwargs:
-                pix, pa = self.bore2pix(q_off,
+                pix, pa = self.bore2pix(q_off,					#HERE
                             self.ctime[qidx_start:qidx_end],
                             self.q_boreground[qidx_start:qidx_end],
                             q_hwp=None, nside=nside_spin, return_pa=True)
             else:
-                pix, pa = self.bore2pix(q_off,
+                pix, pa = self.bore2pix(q_off,					#HERE
                             self.ctime[qidx_start:qidx_end],
                             self.q_bore[qidx_start:qidx_end],
                             q_hwp=None, nside=nside_spin, return_pa=True)
 
             # Expose pixel indices for test centroid.
             self.pix = pix
+            #with np.printoptions(threshold=np.inf): #FIXME: printing the pixels for testing purposes, remove eventually!
+            #    print(pix[:10000])
 
         np.radians(pa, out=pa)
         # Conversion healpix -> IAU convention.
@@ -4553,15 +4556,16 @@ class ScanStrategy(Instrument, qp.QMap):
 
         # Get detector offset quaternion that includes boresight rotation.
         q_off = beam.q_off
+        print('from line 4556 of instrument.py: ' + str(q_off))  # added for testing purposes! (THIS HAPPENS)
         # Add polang to q_off as first rotation. Note minus sign.
         polang = -np.radians(polang)
         q_polang = np.asarray([np.cos(polang/2.), 0., 0., np.sin(polang/2.)])
-        q_off = tools.quat_left_mult(q_off, q_polang)
-
+        q_off = tools.quat_left_mult(q_off, q_polang)			#this is what it shoud be  	#FIXME: remove comment
+        
         if init:
             self.init_dest(nside=self.nside_out, pol=True, vpol=False, reset=True)
 
-        q_off = q_off[np.newaxis]
+        q_off = q_off[np.newaxis]						#this [q_off]  	  	#FIXME: remove comment
 
         if tod is None:
             tod = self.tod
@@ -4594,7 +4598,7 @@ class ScanStrategy(Instrument, qp.QMap):
         elif flag:
             flag = flag[np.newaxis]
 
-        self.from_tod(q_off, tod=tod, flag=flag)
+        self.from_tod(q_off, tod=tod, flag=flag)	#MARTA: I got here
 
         if add_to_global:
             # Add local maps to global maps.
